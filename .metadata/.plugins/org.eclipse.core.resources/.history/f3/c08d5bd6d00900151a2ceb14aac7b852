@@ -1,0 +1,81 @@
+package floorplans;
+
+import java.awt.geom.Line2D;
+import processing.core.PApplet;
+
+import processing.data.XML;
+public class Node{
+  PApplet parent;
+  public int id;
+  public int x;
+  public int y;
+  public Label l;
+  public int type;
+  public boolean connected;
+  public int r,g,b;
+  public int opacity;
+  public NodeGeometry geom;
+  
+  Node ( PApplet _parent, int id, int x, int y, Label l,int type, boolean connected, int r,int g, int b) {
+    this.parent = _parent;
+	this.id = id;
+    this.x = x ;
+    this.y = y ;
+    this.l = l;
+    this.type = type;
+    this.connected = connected;
+    this.r = r;
+    this.g = g;
+    this.b = b;
+    this.opacity =Globals.opacity2;
+    this.geom = new NodeGeometry();
+  }
+  
+  boolean occupied(int x,int y) {
+    if ( Math.sqrt(Math.pow(this.x-x,2) + Math.pow(this.y-y,2)) < Globals.shape )
+      return true;
+    else 
+      return false;
+  }
+  
+  void display() {
+    parent.stroke(60);
+    //strokeWeight(2);
+    parent.fill(r,g,b,opacity);
+    parent.ellipse(this.x, this.y, Globals.shape, Globals.shape);
+  }
+  void setColor(int r, int g, int b) {
+    this.r = r;
+    this.g = g;
+    this.b = b;
+  }
+    
+  void setOpacity(int opacity) {
+    this.opacity = opacity;
+  }
+  
+ void toXML(XML xml){
+/*       this.x = x ;
+    this.y = y ;
+    this.type = type;
+    this.connected = connected;
+    this.r = r;
+    this.g = g;
+    this.b = b;*/
+   XML Xnode = xml.addChild("node");
+   XML Xid = Xnode.addChild("id");
+   Xid.setContent(Integer.toString(id));
+   XML Xlabel = Xnode.addChild("label");
+   Xlabel.setContent(l.name);
+   XML Xtype = Xnode.addChild("type");
+   Xtype.setContent(l.type);
+   XML Xcolor = Xnode.addChild("color");
+   Xcolor.setInt("r",r);
+   Xcolor.setInt("g",g);
+   Xcolor.setInt("b",b);
+   XML Xpose = Xnode.addChild("position");
+   Xpose.setInt("x",x);
+   Xpose.setInt("y",y);
+ }
+ 
+}

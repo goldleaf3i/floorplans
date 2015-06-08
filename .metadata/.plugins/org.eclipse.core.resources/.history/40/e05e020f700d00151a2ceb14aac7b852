@@ -1,0 +1,17 @@
+package floorplans;
+
+
+import java.util.ArrayList;
+
+import processing.core.PApplet;
+import processing.data.XML;
+
+public class Group {
+	public PApplet parent;
+	public ArrayList<Node>  nodes;
+	public string name;
+	Group(){
+		name = "";
+		nodes = new ArrayList<Node>();
+	}
+}

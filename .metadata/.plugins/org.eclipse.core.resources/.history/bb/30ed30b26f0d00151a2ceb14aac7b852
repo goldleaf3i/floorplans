@@ -1,0 +1,9 @@
+package floorplans;
+
+
+import processing.core.PApplet;
+import processing.data.XML;
+
+public class Group {
+	PApplet parent;
+}
