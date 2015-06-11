@@ -2,10 +2,12 @@ package floorplans;
 
 import java.awt.geom.Line2D;
 import processing.core.PApplet;
-
+import java.util.UUID;
 import processing.data.XML;
+
 public class Node{
   PApplet parent;
+  public UUID uid;
   public int id;
   public int x;
   public int y;
@@ -35,6 +37,7 @@ public class Node{
     this.sb = 60;
     this.opacity =Globals.opacity2;
     this.geom = new NodeGeometry(this.parent);
+    this.uid = UUID.randomUUID();
     
   }
   
@@ -49,12 +52,20 @@ public class Node{
     parent.stroke(sr,sg,sb);
     //strokeWeight(2);
     parent.fill(r,g,b,opacity);
-    parent.ellipse(this.x, this.y, Globals.shape, Globals.shape);
+    parent.ellipse(this.x, this.y, Globals.shape/2, Globals.shape/2);
     
     // stampo il contorno.
     this.geom.display();
     this.geom.displayDoors();
   }
+  
+  void displayTopological() {
+	    parent.stroke(sr,sg,sb);
+	    //strokeWeight(2);
+	    parent.fill(r,g,b,opacity);
+	    parent.ellipse(this.x, this.y, Globals.shape, Globals.shape);
+  }
+  
   void setColor(int r, int g, int b) {
     this.r = r;
     this.g = g;
@@ -90,14 +101,7 @@ public class Node{
 	  this.geom.removeLastPoint();
   }
   
- void toXML(XML xml){
-/*       this.x = x ;
-    this.y = y ;
-    this.type = type;
-    this.connected = connected;
-    this.r = r;
-    this.g = g;
-    this.b = b;*/
+ void toXMLPLAIN(XML xml){
    XML Xnode = xml.addChild("node");
    XML Xid = Xnode.addChild("id");
    Xid.setContent(Integer.toString(id));
@@ -112,9 +116,23 @@ public class Node{
    XML Xpose = Xnode.addChild("position");
    Xpose.setInt("x",x);
    Xpose.setInt("y",y);
-   // TODO FARE
-   XML Xpoints = Xnode.addChild("spaces");
-   // TODO da fare: anche stampare connections
+ }
+ 
+ void toXML(XML xml){
+		   XML Xnode = xml.addChild("space");
+		   Xnode.setString("id",uid.toString());
+		   //setContent(Integer.toString(id));
+		   l.toXML(Xnode);
+//		   XML Xcolor = Xnode.addChild("color");
+//		   Xcolor.setInt("r",r);
+//		   Xcolor.setInt("g",g);
+//		   Xcolor.setInt("b",b);
+		   XML Xcent = Xnode.addChild("centroid");
+		   XML Xpose = Xcent.addChild("point");
+		   Xpose.setInt("x",x);
+		   Xpose.setInt("y",y);
+		   this.geom.toXML(Xnode);
+		   
  }
  
  
@@ -128,7 +146,7 @@ public class Node{
 	 geom.addDoor(x, y);
  }
  
- void addConnection( int c){
+ void addConnection( Connection c){
 	 this.geom.addConnection(c);
  }
  
@@ -140,5 +158,9 @@ public class Node{
 	 return this.geom.X.size() == 0;
  }
  
+ public void addDoorUID(int x, int y, UUID uid)
+ {
+	 this.geom.addDoorUID(x, y, uid);
+ }
  
 }

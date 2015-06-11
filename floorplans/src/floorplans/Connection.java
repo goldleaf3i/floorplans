@@ -2,6 +2,7 @@ package floorplans;
 
 import processing.core.PApplet;
 import processing.data.XML;
+import java.util.UUID;
 
 public class Connection{
       PApplet parent;
@@ -14,8 +15,12 @@ public class Connection{
 	  public int door1; 
 	  // e questo e' per la stanza 2
 	  public int door2;
+	  // UUID delle due stanze
+	  public UUID uid1, uid2;
+	  // UUID DEL LINESEGMENT
+	  public UUID segment_uid;
 	  
-	  Connection(PApplet _parent, int first, int second, int x1, int y1, int x2, int y2) {
+	  Connection(PApplet _parent, int first, int second, int x1, int y1, int x2, int y2, UUID uid1, UUID uid2, UUID segment_uid) {
 	    this.parent = _parent;
 		this.first = first;
 	    this.second = second;
@@ -28,8 +33,12 @@ public class Connection{
 	    this.y =0;
 	    this.door1 = 0;
 	    this.door2 = 0;
+	    this.uid1 = uid1;
+	    this.uid2 = uid2;
+	    this.segment_uid = segment_uid;
 	  }
 	 void display() {
+		parent.strokeWeight(2);
 	    parent.fill(111);
 	    parent.line(x1,y1,x2,y2);
 	 } 
@@ -39,6 +48,15 @@ public class Connection{
 		this.door1=door1;
 		this.door2=door2;
 	 }
+	 void toXMLPLAIN(XML xml){
+		 // TODO STAMPARE ANCHE DOOR1 e DOOR2
+	   XML tmp = xml.addChild("connection");
+	   XML id1 = tmp.addChild("id");
+	   id1.setContent(Integer.toString(first));
+	   XML id2 = tmp.addChild("id");
+	   id2.setContent(Integer.toString(second));
+	 }
+	 
 	 void toXML(XML xml){
 		 // TODO STAMPARE ANCHE DOOR1 e DOOR2
 	   XML tmp = xml.addChild("connection");

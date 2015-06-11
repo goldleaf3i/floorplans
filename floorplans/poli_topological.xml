@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<test>
+  <nodes>
+    <node>
+      <id>0</id>
+      <label>SMALL</label>
+      <type>R</type>
+      <color b="4" g="191" r="63"/>
+      <position x="174" y="304"/>
+    </node>
+    <node>
+      <id>1</id>
+      <label>HALL</label>
+      <type>C</type>
+      <color b="56" g="71" r="242"/>
+      <position x="302" y="379"/>
+    </node>
+    <node>
+      <id>2</id>
+      <label>CLASSROOM</label>
+      <type>R</type>
+      <color b="242" g="221" r="27"/>
+      <position x="143" y="409"/>
+    </node>
+    <node>
+      <id>3</id>
+      <label>HALL</label>
+      <type>C</type>
+      <color b="56" g="71" r="242"/>
+      <position x="404" y="408"/>
+    </node>
+    <node>
+      <id>4</id>
+      <label>SMALL</label>
+      <type>R</type>
+      <color b="4" g="191" r="63"/>
+      <position x="499" y="350"/>
+    </node>
+  </nodes>
+  <connections>
+    <connection>
+      <id>1</id>
+      <id>0</id>
+    </connection>
+    <connection>
+      <id>2</id>
+      <id>1</id>
+    </connection>
+    <connection>
+      <id>3</id>
+      <id>1</id>
+    </connection>
+    <connection>
+      <id>4</id>
+      <id>3</id>
+    </connection>
+  </connections>
+</test>

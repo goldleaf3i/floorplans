@@ -3,6 +3,8 @@ import java.util.*;
 import java.awt.geom.Line2D;
 
 import processing.core.PApplet;
+import processing.data.XML;
+import java.util.UUID;
 import static java.lang.Math.pow;
 
 public class NodeGeometry{
@@ -12,11 +14,16 @@ public class NodeGeometry{
   public ArrayList<Line2D.Float> L;
   public ArrayList<Integer> D;
   // indice della connessione, tra le connesioni globali, a cui appartiene la porta i-esima (D).
-  public ArrayList<Integer> C;
+  // TODO LA GESTIONE DELLE CONNESSIONI E' FOLLE COSI VA UNIFICATA
+  public ArrayList<Connection> C;
+  // UUID di tutte le porte. le uso per stamparle e per associarle ai linesegment.
+  public ArrayList<UUID> D_U;
   //TODO COSA E RESOLUTION? LA HO INVENTATA
   // TODO VA CAMBIATA
   public int resolution = Globals.resolution;
   private int x1,y1;
+  
+  private int maxX=0, maxY=0, minX=0, minY=0;
   
   NodeGeometry(PApplet _parent){
   this.parent = _parent;
@@ -25,11 +32,11 @@ public class NodeGeometry{
   L = new ArrayList<Line2D.Float>();
   // Porte
   D = new ArrayList<Integer>();
-  C = new ArrayList<Integer>();
+  C = new ArrayList<Connection>();
+  D_U = new ArrayList<UUID>();
   }
   
   void addPoint(int x, int y) {
-    //TODO NON SO COSA SONO
       X.add(x);
       Y.add(y);
       if (X.size() != 1) {
@@ -40,10 +47,14 @@ public class NodeGeometry{
   }
   
   void addDoor(int x, int y) {
+	  // TODO LA PORTA E' UN PUNTO: VA RESA UN SEGMENTO.
+	  // TODO LA PORTA DEVE AVERE UN MATCHING CON GLI ALTRI PUNTI PIU DIFFICILE.
       D.add(this.pointIndex(x, y));
+      D_U.add(UUID.randomUUID());
+
   }
   
-  void addConnection(int c){
+  void addConnection(Connection c){
 	  C.add(c);
   }
   
@@ -91,27 +102,41 @@ public class NodeGeometry{
   void setLastX(int nx) {
 	  // TODO FARE sia linea che punto
  	  X.set(X.size()-1, nx);
-	  L.get(L.size()-1).x1=(float)nx;
-	  x1 = nx;
+ 	  // TODO check se L.size() risolve
+	  if (L.size()!=0){
+		  L.get(L.size()-1).x1=(float)nx;
+		  x1 = nx;
+		  }
 	  }
  
   void setLastY(int ny) {
 	  // TODO Fare sia linea che punto
 	  Y.set(Y.size()-1, ny);
-	  L.get(L.size()-1).y1=(float)ny;
-	  y1 = ny;
+	  if (L.size()!=0){
+		L.get(L.size()-1).y1=(float)ny;
+	  	y1 = ny;}
+	  
 	  }
   
   void display(){
 	  parent.stroke(10);
 	  // stampo le linee
-	  if (X.size() <= 1)
+	  if (X.size() <= 1){
+		  if (X.size() == 1){
+			    parent.ellipse(X.get(0),Y.get(0),5,5);
+		  }  
 		  return;
+		  }
 	  for (int i=1; i < X.size(); i++){
-		    //TODO
 		    parent.line(Math.round(L.get(i-1).getX1()),Math.round(L.get(i-1).getY1()),Math.round(L.get(i-1).getX2()),Math.round(L.get(i-1).getY2()));
 		    //line(X.get(i-1),Y.get(i-1),X.get(i),Y.get(i));
-		    parent.ellipse(X.get(i-1),Y.get(i-1),5,5);
+		    if (i==1) {
+		    	parent.stroke(255,55,55);
+		    	parent.ellipse(X.get(i-1),Y.get(i-1),5,5);
+		    	parent.stroke(10);
+		    	}
+		    else 
+		    	parent.ellipse(X.get(i-1),Y.get(i-1),5,5);
 		    parent.ellipse(X.get(i),Y.get(i),5,5);
 		  }
   }
@@ -121,7 +146,7 @@ public class NodeGeometry{
 	   	parent.fill(255);
 	    for (int j=0; j < D.size();j++){
 	    	int i = D.get(j);
-	    	parent.rect(X.get(i)-5,Y.get(i)-5,10,10);
+	    	parent.rect(X.get(i)-2,Y.get(i)-2,5,5);
 	    	}
   }
  
@@ -140,19 +165,138 @@ public class NodeGeometry{
   }
  
   void removeLastPoint(){
+	  // TODO CONTROLLARE SE QUESTO FUNZIONA
+	  // TODO MODIFICARE IN MODO TALE CHE RIESCA A GESTIRE IL CANCELLAMENTO DI UNA CONNESSIONE
+	  if (D.indexOf(X.size()-2)!= -1){
+		  D_U.remove(D.indexOf(X.size()-2));
+		  D.remove(D.indexOf(X.size()-2));
+	  }
 	  x1 = X.get(X.size()-2);
 	  y1 = Y.get(Y.size()-2);
 	  X.remove(X.size()-1);
 	  Y.remove(Y.size()-1);
 	  L.remove(L.size()-1);
   }
-  /*int changePoint(int index, int x, int y) {
-  X.get(i) = x;
-  Y.get(i) = y;
-  if (i != 0) {
-    // se i è il primo cambio solo quello. Se i è l'ultimo idem.
-    //Se invece è uno in mezzo devo cambiare due segmenti. E poi fare backtracking.
+
+  void toXML(XML xml){
+//	     // TODO da fare: anche stampare connections
+	  computeBoundingBox();
+	  XML bb = xml.addChild("bounding_box");
+	  XML xMaxX = bb.addChild("maxx");
+	  pointXML(xMaxX,maxX);
+	  XML xMaxY = bb.addChild("maxy");
+	  pointXML(xMaxY,maxY);
+	  XML xMinX = bb.addChild("minx");
+	  pointXML(xMinX,minX);
+	  XML xMinY = bb.addChild("minY");
+	  pointXML(xMinY,minY);
+	  XML polygon = xml.addChild("bounding_polygon");
+	  for (int i=0;i<X.size(); i++) {
+		  pointXML(polygon,i);
+	  }
+	  XML lines = xml.addChild("space_representation");
+	  for (int i=0;i<L.size();i++) {
+		  lineXML(lines,i);
+	  }
+	  XML portals = xml.addChild("portals");
+	  connectionsXML(portals);
+	  }
+  
+
+  private void computeBoundingBox(){
+	  for (int i=1; i<X.size();i++){
+		  if (X.get(i)>=X.get(maxX))
+			  maxX = i;
+		  if (X.get(i)<=X.get(minX))
+			  minX = i;
+		  if (Y.get(i)>=X.get(maxY))
+			  maxY = i;
+		  if (Y.get(i)<=X.get(minY))
+			  minY = i;
+	  }
   }
-  } 
-  */
+  
+  private void pointXML(XML xml,int i){
+	   XML xpoint = xml.addChild("point");
+	   xpoint.setInt("x",X.get(i));
+	   xpoint.setInt("y",Y.get(i));
+  }
+  private void pointXML(XML xml,int x,int y){
+	   XML xpoint = xml.addChild("point");
+	   xpoint.setInt("x",x);
+	   xpoint.setInt("y",y);
+ }
+  
+  private void lineXML(XML xml, int index){
+	  UUID tmpID;
+	  Line2D.Float tmpLine = L.get(index);
+	  int x1 = (int) tmpLine.getX1();
+	  int x2 = (int) tmpLine.getX2();
+	  int y1 = (int) tmpLine.getY1();
+	  int y2 = (int) tmpLine.getY2();
+	  int isdoor = -1;
+	  for (int i=0; i<D.size(); i++) {
+		  int j = D.get(i);
+		  if ((X.get(j) == x1)&&(Y.get(j)==y1)){
+			  isdoor = j;
+			  break;
+		  }
+	  }
+	  // TODO QUESTO VA RIMOSSO E AGGIUNGO IN MODO PIU PRECISO. NON POSSO AGGIUNGERE UN DOPPIO SEGMENTO
+	  // TODO CHECK
+	  if (isdoor != -1) {
+		  //ho trovato l'index, è una porta, la aggiungo.
+			 // altrimenti e' una porta.
+			 //SE E' UNA PORTA ALLORA AGGIUNGO UN ALTRO SEGMENTO FITTIZIO.
+		  XML doorLinesegment = xml.addChild("linesegment");
+		  tmpID= D_U.get(D.indexOf(isdoor));
+		  doorLinesegment.setString("id",tmpID.toString());
+		  pointXML(doorLinesegment,isdoor);
+		  pointXML(doorLinesegment,isdoor);
+		  XML lclassxml = xml.addChild("class");
+		  lclassxml.setContent("PORTAL");
+		  XML ltypexml = xml.addChild("type");
+		  ltypexml.setContent("EXPLICIT");
+		  
+	  }
+	  XML linesegment = xml.addChild("linesegment");
+	  tmpID = UUID.randomUUID();
+	  linesegment.setString("id",tmpID.toString());
+	  pointXML(linesegment,x1,y1);
+	  pointXML(linesegment,x2,y2);
+	  XML lclassxml = xml.addChild("class");
+	  lclassxml.setContent("WALL");
+	  XML ltypexml = xml.addChild("type");
+	  ltypexml.setContent("EXPLICIT");
+  }
+  
+  private void connectionsXML(XML xml){
+	  for(int i=0; i<C.size(); i++){
+		  //TODO RENDERLA HORIZONTAL O VERTICAL IMPLICIT O ESPLICIT
+		  Connection tmpC = C.get(i);
+		  XML portal = xml.addChild("portal");
+		  XML c_id = portal.addChild("id");
+		  // E' uno schifo non andrà mai TODO CAMBIARE
+		  // c_id.setContent(D_U.get(D.indexOf(this.pointIndex(tmpC.x, tmpC.y))).toString());
+		  c_id.setContent(tmpC.segment_uid.toString());
+		  XML classxml = portal.addChild("class");
+		  classxml.setContent("HORIZONTAL");
+		  XML typexml = portal.addChild("type");
+		  typexml.setContent("EXPLICIT");
+		  XML direction = portal.addChild("direction");
+		  direction.setContent("BOTH");
+		  XML other_room = portal.addChild("target");
+		  XML t_id1 = other_room.addChild("id");
+		  t_id1.setContent(tmpC.uid1.toString());
+		  XML t_id2 = other_room.addChild("id");
+		  t_id2.setContent(tmpC.uid2.toString());
+	  }
+  }
+  
+  public void addDoorUID(int x, int y, UUID uid)
+  {
+      int index  = D.indexOf(this.pointIndex(x, y));
+      D_U.set(index, uid);
+ 	 
+  }
 }

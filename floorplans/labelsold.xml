@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<buildingtype>
+  <type_name>
+    SCHOOL
+  </type_name>
+  <labels>
+    <label>
+      <name>SMALL</name>
+      <type>R</type>
+      <color r="63" g="191" b="4"/>
+    </label>
+    <label>
+      <name>CLASSROOM</name>
+      <type>R</type>
+      <color r="27" g="221" b="242"/>
+    </label>
+    <label>
+      <name>LAB</name>
+      <type>R</type>
+      <color r="34" g="103" b="242"/>
+    </label>
+    <label>
+      <name>HALL</name>
+      <type>C</type>
+      <color r="242" g="71" b="56"/>
+    </label>
+      <label>
+      <name>CORRIDOR</name>
+      <type>C</type>
+      <color r="242" g="135" b="5"/>
+    </label>
+    <label>
+      <name>SMALL SERVICE 
+        (PRINTER  DEPOSIT) </name>
+      <type>R</type>
+      <color r="189" g="189" b="189"/>
+    </label>
+    <label>
+      <name>OFFICE 
+        (MEDIUM SERVICE)</name>
+      <type>R</type>
+      <color r="140" g="140" b="139"/>
+    </label>
+    <label>
+      <name>BIG SERVICE</name>
+      <type>R</type>
+      <color r="88" g="88" b="89"/>
+    </label>
+    <label>
+      <name>ENTRANCE</name>
+      <type>E</type>
+      <color r="38" g="128" b="128"/>
+    </label>
+    <label>
+      <name>BATHROOM</name>
+      <type>R</type>
+      <color r="255" g="248" b="125"/>
+    </label>
+    <label>
+      <name>WASHROOM</name>
+      <type>C</type>
+      <color r="232" g="202" b="167"/>
+    </label>
+    <label>
+      <name>GYM 
+        (AUDITORIUM)</name>
+      <type>R</type>
+      <color r="168" g="30" b="30"/>
+    </label>
+    <label>
+      <name>CANTEEN 
+        (LARGE SERVICES)</name>
+      <type>R</type>
+      <color r="40" g="40" b="40"/>
+    </label>
+  </labels>
+</buildingtype>

@@ -16,8 +16,10 @@ public class FloorPlanSketch extends PApplet {
 	// grandezza x e y dell'immagine + grandezza pannello dx
 	String filename = "/Users/matteoluperto/Documents/eclipseworkspace/floorplans/poli.png";
 	boolean show_image = true;
-	int x_dim=1100, y_dim=700;
-	int x2_dim = 300;
+	boolean show_topological = false;
+	static int x_dim=1600, y_dim=900;
+	static int x2_dim = 300;
+	int zoom = 1;
 	// width e height original dell'immagine
 	int x;
 	int y;
@@ -25,8 +27,8 @@ public class FloorPlanSketch extends PApplet {
 	// MESSO IN GLOBALS
 	//int shape = 15;
 	// nodi disegnati
-	ArrayList<Node>  n = new ArrayList<Node>();
-	ArrayList<Connection> c = new ArrayList<Connection>();
+	public ArrayList<Node>  n = new ArrayList<Node>();
+	public ArrayList<Connection> c = new ArrayList<Connection>();
 	// penultimo e ultimo nodo selezionato
 	int last = -1;
 	int lastbu = -1;
@@ -46,11 +48,7 @@ public class FloorPlanSketch extends PApplet {
 	XML xml;
 	// dove inizia pannello dx
 	int offset = x_dim-x2_dim;
-	// dati che servono a disporre i vari pallini
-	int X_label_offset = 40;
-	int X_label_shift = 100;
-	int Y_label_limit = 400;
-	int Y_label_offset = 85;
+
 	Label[] labels;
 	String buildingtype; 
 	
@@ -70,6 +68,11 @@ public class FloorPlanSketch extends PApplet {
 	int set_door = 0;
 	// punti temporanei inseriti 
 	int xp=-1,yp=-1, xp1=-1, yp1=-1;
+	
+	boolean select_cluster = false;
+
+	ArrayList<Group> G = new ArrayList<Group>();
+	int current_group = -1;
 	
 	public void setup() {
 	  size(x_dim, y_dim);
@@ -95,15 +98,16 @@ public class FloorPlanSketch extends PApplet {
 
 	public void draw() {
 		
-	FARE UN SELETTORE CHE FUNZIONI COSI:  
-		NORMALMENTE DISEGNO.
-		SE SCHIACCIO UN PULSANTE PASSO ALLA FASE B: CREO I GRUPPI (CAMBIO LA DRAW CHE DIVENTA UNA FUNZIONE E CAMBIO IL KEYPRESSED CHE DIVENTA UNA FUNZIONE SEMPRE CON LO SWITCH)
-		IL KEYPRESSED DI QUESTO MOMENTO MI FA METTERE IL NOME DELL'ETICHETTA.
-		IL MOUSEKEY MI FA SELEZIONARE I NODI DA INSERIRE.
+//	FARE UN SELETTORE CHE FUNZIONI COSI:  
+//		NORMALMENTE DISEGNO.
+//		SE SCHIACCIO UN PULSANTE PASSO ALLA FASE B: CREO I GRUPPI (CAMBIO LA DRAW CHE DIVENTA UNA FUNZIONE E CAMBIO IL KEYPRESSED CHE DIVENTA UNA FUNZIONE SEMPRE CON LO SWITCH)
+//		IL KEYPRESSED DI QUESTO MOMENTO MI FA METTERE IL NOME DELL'ETICHETTA.
+//		IL MOUSEKEY MI FA SELEZIONARE I NODI DA INSERIRE.
 	  
 		
 	  fill(235);
 	  rect(0,0,offset,y_dim);
+
 	  if (show_image)
 		  {
 		  if (x > y) {
@@ -121,54 +125,90 @@ public class FloorPlanSketch extends PApplet {
 	  rect(offset,0,x2_dim-2,y_dim);
 	  fill(50);
 	  textSize(8);
-	  text(filename,x_dim-x2_dim/2,70);
+	  textAlign(LEFT);
+	  if (filename.length()>50) {
+		  text("..." + filename.substring(filename.length()-35),x_dim-x2_dim+7,40);
+	  }
+	  else
+		  text(filename,x_dim-x2_dim+7,40);
 	  textSize(11);
 	  strokeWeight(3);
-	  for (Label l : labels) {
-	    l.display();
-	    l.rollover(mouseX, mouseY);
+	  if (select_cluster == false ){
+		  for (Label l : labels) {
+		    l.display();
+		    l.rollover(mouseX, mouseY);
+		  }
+		  strokeWeight(1);
+		  // rettangolo di debug
+		  fill(220);
+		  rect(offset,0,x2_dim -2 ,20);
+		  
+		  //bottone save;
+		  fill(190);
+		  rect(offset+30, Globals.Y_label_limit+100, x2_dim-60, 30, 5);
+		  fill(0);
+		  textSize(15);
+		  text("save", offset+20+(x2_dim-60)/2, Globals.Y_label_limit+120 );
+		  
+		  fill(190);
+		  rect(offset+30, Globals.Y_label_limit+150, x2_dim-60, 30, 5);
+		  fill(0);
+		  text("load", offset+20+(x2_dim-60)/2, Globals.Y_label_limit+170 );
+		  
+		  // TODO SALVARE LA RESOLUTION
+		  textSize(15);
+		  text("1 m (n/m)(+/-)", offset+20+(x2_dim-60)/2, Globals.Y_label_limit+200 );
+		  textSize(8);
+		  text("1m",offset+20+(x2_dim-60)/2, Globals.Y_label_limit+208);
+		  line(offset+20+(x2_dim-60)/2-resolution/2,Globals.Y_label_limit+210,offset+20+(x2_dim-60)/2+resolution/2,Globals.Y_label_limit+210);
+		  line(offset+20+(x2_dim-60)/2-resolution/2,Globals.Y_label_limit+212,offset+20+(x2_dim-60)/2-resolution/2,Globals.Y_label_limit+208);
+		  line(offset+20+(x2_dim-60)/2+resolution/2,Globals.Y_label_limit+212,offset+20+(x2_dim-60)/2+resolution/2,Globals.Y_label_limit+208);
+		  textSize(15);
+		  
+		  fill(190);
+		  rect(offset+30, Globals.Y_label_limit+230, x2_dim-60, 30, 5);
+		  fill(0);
+		  text("add groups", offset+20+(x2_dim-60)/2, Globals.Y_label_limit+250 );
+		  
+		  textSize(11);
+		  
+		  stroke(10);
+		  }
+	  else {
+		  strokeWeight(1);
+		  
+		  for (int i=0;i<G.size(); i++) {
+			  	Group g = G.get(i);
+			    g.display();
+			  }
+		  // TODO parte dove devo salvare il resto delle cose
+		  //ssdfsdfsfd stavo ompletando qui
+		  fill(190);
+		  rect(offset+30, Globals.Y_label_limit+100, x2_dim-60, 30, 5);
+		  fill(0);
+		  textSize(15);
+		  text("save", offset+20+(x2_dim-60)/2, Globals.Y_label_limit+120 );
+		  
+		  fill(190);
+		  rect(offset+30, Globals.Y_label_limit+150, x2_dim-60, 30, 5);
+		  fill(0);
+		  text("new group", offset+20+(x2_dim-60)/2, Globals.Y_label_limit+170 );
+		  // nome temporaneo del gruppo
+		  text(G.get(current_group).name,offset+20+(x2_dim-60)/2, Globals.Y_label_limit+210 );
+		  textSize(11);
+		  
+		  stroke(10);
 	  }
-	  strokeWeight(1);
-	  // rettangolo di debug
-	  fill(220);
-	  rect(offset,0,x2_dim -2 ,20);
-	  
-	  //bottone save;
-	  fill(190);
-	  rect(offset+30, Y_label_limit+100, x2_dim-60, 30, 5);
-	  fill(0);
-	  textSize(15);
-	  text("save", offset+20+(x2_dim-60)/2, Y_label_limit+120 );
-	  
-	  fill(190);
-	  rect(offset+30, Y_label_limit+150, x2_dim-60, 30, 5);
-	  fill(0);
-	  text("load", offset+20+(x2_dim-60)/2, Y_label_limit+170 );
-	  
-	  // TODO SALVARE LA RESOLUTION
-	  textSize(15);
-	  text("1 m (n/m)(+/-)", offset+20+(x2_dim-60)/2, Y_label_limit+200 );
-	  textSize(8);
-	  text("1m",offset+20+(x2_dim-60)/2, Y_label_limit+208);
-	  line(offset+20+(x2_dim-60)/2-resolution/2,Y_label_limit+210,offset+20+(x2_dim-60)/2+resolution/2,Y_label_limit+210);
-	  line(offset+20+(x2_dim-60)/2-resolution/2,Y_label_limit+212,offset+20+(x2_dim-60)/2-resolution/2,Y_label_limit+208);
-	  line(offset+20+(x2_dim-60)/2+resolution/2,Y_label_limit+212,offset+20+(x2_dim-60)/2+resolution/2,Y_label_limit+208);
-	  textSize(15);
-	  
-	  fill(190);
-	  rect(offset+30, Y_label_limit+230, x2_dim-60, 30, 5);
-	  fill(0);
-	  text("add groups", offset+20+(x2_dim-60)/2, Y_label_limit+250 );
-	  
-	  textSize(11);
-	  
-	  stroke(10);
 	  for (int i=0; i < c.size(); i++)
 	    ((Connection) c.get(i)).display();
+	  strokeWeight(1);
 	  stroke(220);
-	  for (int i=0; i < n.size(); i++)
-	    ((Node) n.get(i)).display();
-	  
+	  if (show_topological)
+		  for (int i=0; i < n.size(); i++)
+			  ((Node) n.get(i)).displayTopological();
+	  else 
+		  for (int i=0; i < n.size(); i++)
+			  ((Node) n.get(i)).display();
 	  deb(message);
 	  //deb(Integer.toString(mouseX));
 	  
@@ -176,7 +216,7 @@ public class FloorPlanSketch extends PApplet {
 
 	public void mousePressed() 
 	{ 
-	   
+	  if (select_cluster == false) { 
 	  boolean found = false;
 	  if ((mouseX < offset) && (current_label != -1))  
 	  {
@@ -217,7 +257,7 @@ public class FloorPlanSketch extends PApplet {
 		    // altrimenti se ho selezionato il nodo, sto facendo la connessione.
 		      if ((last!=-1) && (lastbu!=-1)) {
 		        last_insert = 2;
-		        c.add(new Connection(this, last, lastbu, n.get(last).x, n.get(last).y, n.get(lastbu).x, n.get(lastbu).y));
+		        c.add(new Connection(this, last, lastbu, n.get(last).x, n.get(last).y, n.get(lastbu).x, n.get(lastbu).y,n.get(last).uid, n.get(lastbu).uid,UUID.randomUUID()));
 		        n.get(last).setOpacity(Globals.opacity2);
 		        n.get(lastbu).setOpacity(Globals.opacity2);
 		        last = -1;
@@ -234,17 +274,21 @@ public class FloorPlanSketch extends PApplet {
 	  else{
 	   // sono nella parte dove si salva.
 	   last_insert = 0;
-	   if ((mouseX >= offset+30) && (mouseX <= offset+x2_dim-30) && (mouseY >= Y_label_limit+100) && (mouseY <= Y_label_limit+130)){
+	   if ((mouseX >= offset+30) && (mouseX <= offset+x2_dim-30) && (mouseY >= Globals.Y_label_limit+100) && (mouseY <= Globals.Y_label_limit+130)){
 	         saveGraph();
 	         message = "saved";
 	   }
-	   if ((mouseX >= offset+30) && (mouseX <= offset+x2_dim-30) && (mouseY >= Y_label_limit+150) && (mouseY <= Y_label_limit+180)){
+	   if ((mouseX >= offset+30) && (mouseX <= offset+x2_dim-30) && (mouseY >= Globals.Y_label_limit+150) && (mouseY <= Globals.Y_label_limit+180)){
 	         //loadGraph();  
 	         selectInput("Select a file to process:", "fileSelected");
 	         message = "loaded";
 	   }
-	    
-	    
+
+	   if ((mouseX >= offset+30) && (mouseX <= offset+x2_dim-30) && (mouseY >= Globals.Y_label_limit+230) && (mouseY <= Globals.Y_label_limit+250)){
+		   select_cluster = true;
+		   newGroup();
+		   
+	   }
 	    
 	   found = false;
 	   int new_selected=-1;
@@ -264,10 +308,48 @@ public class FloorPlanSketch extends PApplet {
 	       labels[current_label].switch_val();
 	    }
 	  }
+	}
+	else {
+		mouseCluster(mouseX,mouseY);
+	}
 	  redraw();
 	}
-
+	
+	public void newGroup() {
+		G.add(new Group(this));
+		current_group = G.size()-1;
+		Label l = labels[current_group];
+		G.get(current_group).setColor(l.r, l.g, l.b);
+		G.get(current_group).setPose(Globals.X_label_offset  + offset , Globals.group_step * (current_group+3));
+	}
+	
+	public void mouseCluster(int mX, int mY){
+		 if ((mouseX < offset) && (current_label != -1)) {
+			    for (int i=0; i < n.size(); i++)
+			        if  (n.get(i).occupied(mouseX,mouseY)) {
+			          Group tmpG = G.get(current_group);
+			          n.get(i).setStroke(tmpG.r,tmpG.g,tmpG.b);
+			          tmpG.addNode(n.get(i));
+			         break;
+			        }
+		 }
+		 else {
+			// sono nella parte dove si salva.
+			   last_insert = 0;
+			   if ((mouseX >= offset+30) && (mouseX <= offset+x2_dim-30) && (mouseY >= Globals.Y_label_limit+100) && (mouseY <= Globals.Y_label_limit+130)){
+			         saveGraph();
+			         message = "saved";
+			   }
+			   if ((mouseX >= offset+30) && (mouseX <= offset+x2_dim-30) && (mouseY >= Globals.Y_label_limit+150) && (mouseY <= Globals.Y_label_limit+180)){
+				     newGroup();
+			         message = "group created";
+			   }
+		 }
+	}
+	
 	public void keyPressed(){
+	if (select_cluster== false)
+	{
 	  switch (key) {
 	  // TODO commentare cosa fanno da qualche parte
 	  case BACKSPACE:
@@ -275,6 +357,7 @@ public class FloorPlanSketch extends PApplet {
 		  switch (last_insert) {
           case 1:  last_insert = 0;
                    n.remove(n.size() - 1);
+                   insert_room = -1;
                    break;
           case 2:  last_insert = 0;
                    c.remove(c.size() - 1);
@@ -304,6 +387,7 @@ public class FloorPlanSketch extends PApplet {
 		  if (insert_room == -1)
 			  return;
 		  n.get(insert_room).movePoint(1);
+		  this.localMovePoint(1);
 		  break;
 	  case 's': 
 	  case 'S':
@@ -311,6 +395,7 @@ public class FloorPlanSketch extends PApplet {
 		  if (insert_room == -1)
 			  return;
 		  n.get(insert_room).movePoint(2);
+		  this.localMovePoint(2);
 		  break;
 	  case 'a': 
 	  case 'A':
@@ -318,6 +403,7 @@ public class FloorPlanSketch extends PApplet {
 		  if (insert_room == -1)
 			  return;
 		  n.get(insert_room).movePoint(4);
+		  this.localMovePoint(4);
 		  break;
 	  case 'd': 
 	  case 'D':
@@ -325,6 +411,7 @@ public class FloorPlanSketch extends PApplet {
 		  if (insert_room == -1)
 			  return;
 		  n.get(insert_room).movePoint(3);
+		  this.localMovePoint(3);
 		  break;
 	  case 'm': // INGRANDISCO LA SCALA
 	  case 'M':
@@ -341,9 +428,35 @@ public class FloorPlanSketch extends PApplet {
 		  else
 			  show_image = true;
 		  break;
-	
+	  case 'q':
+	  case 'Q':
+		  if (show_topological)
+			  show_topological = false;
+		  else
+			  show_topological = true;
+		  break;
+	  case 'z':
+	  case 'Z':
+		  zoom++;
+		  break;
+	  case 'x':
+	  case 'X':
+		  zoom--;
+		  break;
+		  
 	  }	
-	
+	}
+	else {
+		if ((key >= 'A' && key <= 'Z')||(key >= 'a' && key <= 'z')) {
+			G.get(current_group).addChar(key);
+		  } else if(key == BACKSPACE){
+			  if (G.get(current_group).name.length() > 1) {
+				  G.get(current_group).name = G.get(current_group).name.substring(0, G.get(current_group).name.length()-1);
+			    }
+			  else
+				  G.get(current_group).removeLast();}
+			
+	}
     message = String.valueOf(key);
     //message = "asdallalla";ù
     
@@ -351,6 +464,30 @@ public class FloorPlanSketch extends PApplet {
     redraw();
 	}
 
+private void localMovePoint(int directions){
+	//  TODO CHECK
+	  int index =this.X.size() -1;
+	  // 1 su 2 giu 3 dx 4 sx 
+	  switch (directions) {
+	  case 1: 
+		  Y.set(index,Y.get(index)-Globals.step);
+		  L.get(L.size()-1).y1 -= (float)Globals.step;
+		  break;
+	  case 2: 
+		  Y.set(index,Y.get(index)+Globals.step);
+		  L.get(L.size()-1).y1 += (float)Globals.step;
+		  break;
+	  case 3: 
+		  X.set(index,X.get(index)+Globals.step);
+		  L.get(L.size()-1).x1 += (float)Globals.step;
+		  break;
+	  case 4: 
+		  X.set(index,X.get(index)-Globals.step);
+		  L.get(L.size()-1).x1 -= (float)Globals.step;
+		  break;
+	  }
+		  
+	  }
 	
 	public void addPoint(int mX, int mY) {
 	// LA FUNZIONE CHE GESTISCE L'AGGIUNTA DI UN PUNTO ALLA MAPPA.
@@ -362,9 +499,9 @@ public class FloorPlanSketch extends PApplet {
 	    xp = mX;
 	    yp = mY;
 	    
-	    if (abs(xp-xp1)<Globals.shape)
+	    if (abs(xp-xp1)<Globals.p_distance)
 	      xp = xp1;
-	    if (abs(yp-yp1)<Globals.shape)
+	    if (abs(yp-yp1)<Globals.p_distance)
 	      yp = yp1;
 	  
 	    float tmpX1 = 0;
@@ -494,12 +631,16 @@ public class FloorPlanSketch extends PApplet {
 
 	  public void addDoor(int index1, int index2) {
 		  // una stanza è sicuramente id1.
+		  // TODO C'è un problema con le porte, possono essere gestite in maniera insensata. VA PULITO IL CODICE DOVE LE AGGIUNGO (e tolto il codice precedente) E SISTEMATO IL FATTO CHE ALCUNE PORTE POSSONO ESSER PENDENTI (possono?)
 		  int id1 = insert_room;
 		  int id2 = D2.get(D.indexOf(index1));
-		  c.add(new Connection(this, id1, id2, n.get(id1).x, n.get(id1).y, n.get(id2).x, n.get(id2).y));
+		  UUID uid = UUID.randomUUID();
+		  c.add(new Connection(this, id1, id2, n.get(id1).x, n.get(id1).y, n.get(id2).x, n.get(id2).y,n.get(id1).uid,n.get(id2).uid,uid));
 		  c.get(c.size()-1).setDoor(X.get(index1), Y.get(index1), index1, index2);
-		  n.get(id1).addConnection(c.size()-1);
-		  n.get(id2).addConnection(c.size()-1);
+		  n.get(id1).addConnection(c.get(c.size()-1));
+		  n.get(id2).addConnection(c.get(c.size()-1));
+		  n.get(id1).addDoorUID(X.get(index1), Y.get(index1), uid);
+		  n.get(id2).addDoorUID(X.get(index1), Y.get(index1), uid);
 	  }
 	
 	public void loadData() {
@@ -519,7 +660,7 @@ public class FloorPlanSketch extends PApplet {
 	  // The size of the array of Bubble objects is determined by the total XML elements named "bubble"
 	  labels = new Label[children.length]; 
 	  //deb( Integer.toString(labels.length));
-	  int xo = X_label_offset  + offset ;
+	  int xo = Globals.X_label_offset  + offset ;
 	  int yo = 0;
 	  for (int i = 0; i < labels.length; i++) {
 	    
@@ -536,11 +677,11 @@ public class FloorPlanSketch extends PApplet {
 	    int g = colorElement.getInt("g");
 	    int b = colorElement.getInt("b");
 
-	    if (yo > Y_label_limit) {
-	      xo += X_label_shift;
+	    if (yo > Globals.Y_label_limit) {
+	      xo += Globals.X_label_shift;
 	      counter = 1;
 	    }
-	    yo = Y_label_offset * counter ;
+	    yo = Globals.Y_label_shift * counter +10 ;
 	    counter ++;
 	    // Make a Bubble object out of the data read
 	    labels[i] = new Label(this, name, type, r, g, b, Globals.shape*2, xo, yo);
@@ -563,22 +704,66 @@ public class FloorPlanSketch extends PApplet {
 	  }
 	}
 	public void saveGraph() {
+		
 	  String fileNext = filename.substring(0, filename.lastIndexOf('.')) + ".xml";
-	  XML  savedata = new XML("prova");
-	  XML nodes = savedata.addChild("nodes");
-	  XML connections = savedata.addChild("connections");
+	  // TODO ADD TYPE AND OTHER INFO ON FLOOR
+	  XML  savedata = new XML("building");
+	  savedata.setString("id", UUID.randomUUID().toString());
+	  XML xName = savedata.addChild("name");
+	  xName.setContent( filename.substring(0, filename.lastIndexOf('.')));
+	  scaleXML(savedata);
+	  XML info = savedata.addChild("Info");
+	  info.setContent("Inserire informazioni sull'edificio");
+	  XML xBuildingType = savedata.addChild("building_type");
+	  XML mainType = xBuildingType.addChild("main_type");
+	  mainType.setContent(buildingtype);
+	  XML floor = savedata.addChild("floor");
+	  XML spaces = floor.addChild("spaces");
+	  XML groups = floor.addChild("groups");
 	  for (int i=0; i < n.size(); i++) 
 	  { 
-	    n.get(i).toXML(nodes);      
+	    n.get(i).toXML(spaces);      
 	  }
-	  for (int i=0; i < c.size(); i++) 
+	  for (int i=0; i < G.size(); i++) 
 	  { 
-	    c.get(i).toXML(connections);      
+	    G.get(i).toXML(groups);      
 	  }
 	  saveXML(savedata, fileNext);
 	  message = "lallalalla";
+	  // salvo anche solo la mappa topologica.
+	  saveTopologicalMap();
 
 	}
+	private void scaleXML(XML xml){
+		XML xScale = xml.addChild("scale");
+		XML xRepresented = xScale.addChild("represented_distance");
+		XML xValue = xRepresented.addChild("value");
+		xValue.setIntContent(resolution);
+		XML xUM1 = xRepresented.addChild("um");
+		xUM1.setContent("pixel");
+		XML xReal = xScale.addChild("real_distance");
+		XML xValue2 = xReal.addChild("value");
+		xValue2.setIntContent(90);
+		XML xUM2 = xReal.addChild("um");
+		xUM2.setContent("m");
+	}
+	public void saveTopologicalMap(){
+		  String fileNext = filename.substring(0, filename.lastIndexOf('.')) + "_topological.xml";
+		  XML  savedata = new XML("test");
+		  XML nodes = savedata.addChild("nodes");
+		  XML connections = savedata.addChild("connections");
+		  for (int i=0; i < n.size(); i++) 
+		  { 
+		    n.get(i).toXMLPLAIN(nodes);      
+		  }
+		  for (int i=0; i < c.size(); i++) 
+		  { 
+		    c.get(i).toXMLPLAIN(connections);      
+		  }
+		  saveXML(savedata, fileNext);
+		  message = "lallalalla";
+	}
+	
 	public void deb(String s) {
 	   fill(0);
 	   text(s,offset+10+(x2_dim-60)/2,15);

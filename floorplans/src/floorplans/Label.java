@@ -1,6 +1,7 @@
 package floorplans;
 
 import processing.core.PApplet;
+import processing.data.XML;
 import processing.core.*;
 
 public class Label{
@@ -70,8 +71,28 @@ public class Label{
 	    parent.fill(r,g,b);
 	    parent.ellipse(x,y,shape,shape);
 	    parent.fill(0);
-	    parent.textAlign(parent.CENTER);
-	    parent.text(name,x,y+shape/2+20);
+	    if (name.length()<=10){
+		    parent.textAlign(parent.CENTER);
+		    parent.text(name,x,y+shape/2+20);
+		    }
+	    else {
+	    	String[] splitStr = name.split("\\s+");
+	    	parent.textSize(8);
+	    	for (int i=0; i<splitStr.length; i++){
+			    parent.textAlign(parent.CENTER);
+			    parent.text(splitStr[i],x,y+shape/2+12+i*8);
+	    	}
+	    	parent.textSize(11);
+	    }
 
+	  }
+	  void toXML(XML xml)
+	  {
+		  // TODO sistemare poi qui le multilabel ed i vari dati che abbiamo.
+		  XML labels = xml.addChild("labels");
+		  XML xtype = labels.addChild("type");
+		  xtype.setContent(this.type);
+		  XML xLab = labels.addChild("label");
+		  xLab.setContent(this.name);
 	  }
 	}
