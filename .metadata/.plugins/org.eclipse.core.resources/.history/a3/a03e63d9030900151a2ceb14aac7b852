@@ -1,6 +1,0 @@
-package floorplans;
-//QUI CI METTO LE VARIABILI GLOBALI;
-public class Globals {
-    public static int a;
-    public static int b;
-}

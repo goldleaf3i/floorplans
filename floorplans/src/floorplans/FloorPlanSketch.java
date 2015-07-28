@@ -17,9 +17,12 @@ public class FloorPlanSketch extends PApplet {
 	String filename = "/Users/matteoluperto/Documents/eclipseworkspace/floorplans/poli.png";
 	boolean show_image = true;
 	boolean show_topological = false;
-	static int x_dim=1600, y_dim=900;
+	static int x_dim=1300, y_dim=900;
 	static int x2_dim = 300;
-	int zoom = 1;
+	public int zx = 0;
+	public int zy = 0;
+	public Offset oo;
+	int zoom = 2;
 	// width e height original dell'immagine
 	int x;
 	int y;
@@ -41,7 +44,7 @@ public class FloorPlanSketch extends PApplet {
 	int last_insert = 0;
 
 	// tolerance value for point-to-point comparison, in pixel;
-	int resolution = 15;
+	public int resolution = 15;
 
 	String message = " ";
 
@@ -73,7 +76,7 @@ public class FloorPlanSketch extends PApplet {
 
 	ArrayList<Group> G = new ArrayList<Group>();
 	int current_group = -1;
-	
+
 	public void setup() {
 	  size(x_dim, y_dim);
 	  textSize(11);
@@ -93,6 +96,7 @@ public class FloorPlanSketch extends PApplet {
 	  loadData();
 	  noLoop();
 	  redraw();
+	  oo = new Offset();
 	  
 	}
 
@@ -111,13 +115,30 @@ public class FloorPlanSketch extends PApplet {
 	  if (show_image)
 		  {
 		  if (x > y) {
-		    image(img, 0, 0,x_dim-x2_dim, y*(x_dim-x2_dim)/x);
+		    image(img, -oo.zx, -oo.zy,zoom*(x_dim-x2_dim), zoom*(y*(x_dim-x2_dim)/x));
 		  }
 		  else {
-		    image(img, 0, 0,x*y_dim/y, y_dim);
+		    image(img, -oo.zx, -oo.zy,zoom*(x*y_dim/y), zoom*y_dim);
 		    //image(img, 0, 0,650 , 400);
 		  }
 		  }
+	  if (show_topological)
+		  for (int i=0; i < c.size(); i++)
+		    ((Connection) c.get(i)).displayTopological();
+	  else 
+		  for (int i=0; i < c.size(); i++)
+			    ((Connection) c.get(i)).display();
+	  strokeWeight(1);
+	  stroke(220);
+	  if (show_topological)
+		  for (int i=0; i < n.size(); i++)
+			  ((Node) n.get(i)).displayTopological();
+	  else 
+		  for (int i=0; i < n.size(); i++)
+			  ((Node) n.get(i)).display();
+	  deb(message);
+	  //deb(Integer.toString(mouseX));
+	  
 	 // message = Integer.toString(x*y_dim/y);
 	  //image(img, 0, 0, 600,650);
 	  fill(235);
@@ -199,19 +220,7 @@ public class FloorPlanSketch extends PApplet {
 		  
 		  stroke(10);
 	  }
-	  for (int i=0; i < c.size(); i++)
-	    ((Connection) c.get(i)).display();
-	  strokeWeight(1);
-	  stroke(220);
-	  if (show_topological)
-		  for (int i=0; i < n.size(); i++)
-			  ((Node) n.get(i)).displayTopological();
-	  else 
-		  for (int i=0; i < n.size(); i++)
-			  ((Node) n.get(i)).display();
-	  deb(message);
-	  //deb(Integer.toString(mouseX));
-	  
+	 
 	}
 
 	public void mousePressed() 
@@ -225,7 +234,7 @@ public class FloorPlanSketch extends PApplet {
 	    if (insert_room == -1) {
 		    // Cerco se ho selezionato già un nodo.
 		    for (int i=0; i < n.size(); i++)
-		        if  (n.get(i).occupied(mouseX,mouseY)) {
+		        if  (n.get(i).occupied(mouseX-zx,mouseY-zy)) {
 		          found = true;
 		          if (last != -1 ) {
 		            n.get(last).setOpacity(Globals.opacity2);
@@ -239,9 +248,15 @@ public class FloorPlanSketch extends PApplet {
 		    if (!found) {
 		      ellipse(mouseX,mouseY,10,10);
 		      Label l = labels[current_label];
-		      n.add(new Node(this, n.size(), mouseX, mouseY, l, current_label, false, l.r, l.g, l.b));
+		      n.add(new Node(this, n.size(), mouseX+zx, mouseY+zy, l, current_label, false, l.r, l.g, l.b));
 		      last_insert = 1;
 		      insert_room = n.size()-1;
+		      //zoom = 2;
+		      //zx = mouseX;
+		      //zy = mouseY;
+		      oo.zx = zx;
+		      oo.zy = zy;
+		      n.get(n.size()-1).setOffset(oo);
 		      n.get(n.size() - 1).setStroke(Globals.rn_active, Globals.gn_active, Globals.bn_active);
 		      if (last != -1 ) {
 		            n.get(last).setOpacity(Globals.opacity2);
@@ -257,7 +272,7 @@ public class FloorPlanSketch extends PApplet {
 		    // altrimenti se ho selezionato il nodo, sto facendo la connessione.
 		      if ((last!=-1) && (lastbu!=-1)) {
 		        last_insert = 2;
-		        c.add(new Connection(this, last, lastbu, n.get(last).x, n.get(last).y, n.get(lastbu).x, n.get(lastbu).y,n.get(last).uid, n.get(lastbu).uid,UUID.randomUUID()));
+		        c.add(new Connection(this, last, lastbu, n.get(last).x, n.get(last).y, n.get(lastbu).x, n.get(lastbu).y,n.get(last).uid, n.get(lastbu).uid,UUID.randomUUID(),oo));
 		        n.get(last).setOpacity(Globals.opacity2);
 		        n.get(lastbu).setOpacity(Globals.opacity2);
 		        last = -1;
@@ -267,7 +282,7 @@ public class FloorPlanSketch extends PApplet {
 	    }
 	    else {
 	    	// STO AGGIUNGENDO UNA NUOVA STANZA
-	    	addPoint(mouseX, mouseY);
+	    	addPoint((mouseX+zx), (mouseY+zy));
 	    	last_insert = 3;
 	    }
 	  }
@@ -286,6 +301,13 @@ public class FloorPlanSketch extends PApplet {
 
 	   if ((mouseX >= offset+30) && (mouseX <= offset+x2_dim-30) && (mouseY >= Globals.Y_label_limit+230) && (mouseY <= Globals.Y_label_limit+250)){
 		   select_cluster = true;
+		   zoom=1;
+		   oo.zoom=zoom;
+		   zx=0;
+		   zy=0;
+		   oo.zx=zx;
+		   oo.zy=zy;
+		   show_topological=true;
 		   newGroup();
 		   
 	   }
@@ -326,7 +348,7 @@ public class FloorPlanSketch extends PApplet {
 	public void mouseCluster(int mX, int mY){
 		 if ((mouseX < offset) && (current_label != -1)) {
 			    for (int i=0; i < n.size(); i++)
-			        if  (n.get(i).occupied(mouseX,mouseY)) {
+			        if  (n.get(i).occupied(mouseX*Globals.bigzoom,mouseY*Globals.bigzoom)) {
 			          Group tmpG = G.get(current_group);
 			          n.get(i).setStroke(tmpG.r,tmpG.g,tmpG.b);
 			          tmpG.addNode(n.get(i));
@@ -355,58 +377,64 @@ public class FloorPlanSketch extends PApplet {
 	  case BACKSPACE:
 		  // last_inser vale 0 se non ho fatto nulla. se vale 1 ho inserito un nodo; se vale 2 ho inserito un arco;
 		  switch (last_insert) {
-          case 1:  last_insert = 0;
-                   n.remove(n.size() - 1);
-                   insert_room = -1;
-                   break;
-          case 2:  last_insert = 0;
-                   c.remove(c.size() - 1);
-                   break;
+          case 1: last_insert = 0;
+                  n.remove(n.size() - 1);
+                  insert_room = -1;
+                  break;
+          case 2: last_insert = 0;
+                  c.remove(c.size() - 1);
+                  break;
           case 3: // CASO IN CUI HO INSERITO UN PUNTO TODO
-        	  	 n.get(insert_room).removeLastPoint();
+        	  	  int temp = n.get(insert_room).removeLastPoint();
         		  xp1 = X.get(X.size()-2);
         		  yp1 = Y.get(Y.size()-2);
         		  X.remove(X.size()-1);
         		  Y.remove(Y.size()-1);
-        		  L.remove(L.size()-1);
-          		 break;
+        		  if (temp != 0) 
+        			  L.remove(L.size()-1);
+          		  break;
           default: break;
 		  }
 		  break;
 	  case 'c':
-	  case 'C': 
 		  if (set_door == 0 )
 			  set_door = 1;
 		  else 
 			  set_door = 0;
 		  break;
+	  case 'C': 
+		  if (set_door == 0 )
+			  set_door = 2;
+		  else 
+			  set_door = 0;
+		  break;
 		  // TODO SPOSTO I PUNTI ANCHE NEL GLOBALE CHE NON LO HO FATTO
-	  case 'w': 
-	  case 'W':
+	  case 't': 
+	  case 'T':
 		  // TODO ex case UP
 		  if (insert_room == -1)
 			  return;
 		  n.get(insert_room).movePoint(1);
 		  this.localMovePoint(1);
 		  break;
-	  case 's': 
-	  case 'S':
+	  case 'g': 
+	  case 'G':
 		  //TODO ex caso down
 		  if (insert_room == -1)
 			  return;
 		  n.get(insert_room).movePoint(2);
 		  this.localMovePoint(2);
 		  break;
-	  case 'a': 
-	  case 'A':
+	  case 'f': 
+	  case 'F':
 		  // TODO ex caso left
 		  if (insert_room == -1)
 			  return;
 		  n.get(insert_room).movePoint(4);
 		  this.localMovePoint(4);
 		  break;
-	  case 'd': 
-	  case 'D':
+	  case 'h': 
+	  case 'H':
 		  // TODO ex caso RIGHT
 		  if (insert_room == -1)
 			  return;
@@ -415,11 +443,11 @@ public class FloorPlanSketch extends PApplet {
 		  break;
 	  case 'm': // INGRANDISCO LA SCALA
 	  case 'M':
-		  resolution+=1;
+		  resolution+=2;
 		  break;
 	  case 'n': // RIDUCO LA SCALA
 	  case 'N':
-		  resolution -=1;
+		  resolution -=2;
 		  break;
 	  case 'i':
 	  case 'I':
@@ -430,20 +458,46 @@ public class FloorPlanSketch extends PApplet {
 		  break;
 	  case 'q':
 	  case 'Q':
-		  if (show_topological)
+		  if (show_topological){
 			  show_topological = false;
-		  else
+		  	  zoom=2;
+		  	  oo.zx=zx;
+		  	  oo.zy=zy;
+		  	  oo.zoom=zoom;
+		  	  }
+		  else{
 			  show_topological = true;
-		  break;
-	  case 'z':
-	  case 'Z':
-		  zoom++;
-		  break;
-	  case 'x':
-	  case 'X':
-		  zoom--;
-		  break;
+		  	  zoom=1;
+		  	  oo.zx=0;
+		  	  oo.zy=0;
+		  	  oo.zoom=zoom;
+		  	  }
 		  
+		  break;
+	  case 'd':
+	  case 'D':
+		  // DESTRA
+		  zx=zx+50;
+		  oo.zx = zx;
+		  break;
+	  case 's':
+	  case 'S':
+		  //GIU
+		  zy=zy+50;
+		  oo.zy=zy;
+		  break;
+	  case 'w':
+	  case 'W':
+		  //SU
+		  zy=zy-50;
+		  oo.zy=zy;
+		  break;
+	  case 'a':
+	  case 'A':
+		  //SX
+		  zx=zx-50;
+		  oo.zx=zx;
+		  break;
 	  }	
 	}
 	else {
@@ -602,14 +656,17 @@ private void localMovePoint(int directions){
 		    // TODO lo aggiungo anche alla stanza
 		    n.get(insert_room).addPoint(xp, yp);
 
-		    if (set_door == 1){
+		    if (set_door != 0){
 		    	set_door = 0;
 		    	D.add(X.size()-1);
 		    	D2.add(insert_room);
 		    	//non aggiunge le porte
 		    	// TODO NON VA ADD  DOOOR
 		    	if (insert_room != -1){
-		    		n.get(insert_room).addDoor(xp, yp);
+		    		if (set_door == 1 )
+		    			n.get(insert_room).addDoor(xp, yp, true);
+		    		else 
+		    			n.get(insert_room).addDoor(xp, yp, false);
 		    		if (door_index != -1) {
 		    			// Ho trovato una porta, aggiungo una connessione.
 		    			addDoor(door_index, X.size()-1);
@@ -635,7 +692,7 @@ private void localMovePoint(int directions){
 		  int id1 = insert_room;
 		  int id2 = D2.get(D.indexOf(index1));
 		  UUID uid = UUID.randomUUID();
-		  c.add(new Connection(this, id1, id2, n.get(id1).x, n.get(id1).y, n.get(id2).x, n.get(id2).y,n.get(id1).uid,n.get(id2).uid,uid));
+		  c.add(new Connection(this, id1, id2, n.get(id1).x, n.get(id1).y, n.get(id2).x, n.get(id2).y,n.get(id1).uid,n.get(id2).uid,uid,oo));
 		  c.get(c.size()-1).setDoor(X.get(index1), Y.get(index1), index1, index2);
 		  n.get(id1).addConnection(c.get(c.size()-1));
 		  n.get(id2).addConnection(c.get(c.size()-1));
@@ -716,6 +773,17 @@ private void localMovePoint(int directions){
 	  info.setContent("Inserire informazioni sull'edificio");
 	  XML xBuildingType = savedata.addChild("building_type");
 	  XML mainType = xBuildingType.addChild("main_type");
+	  int image_resize = x_dim - x2_dim;
+	  // TODO io riduco l'immagine a 1000*900 PIXEL -> DEVO RIPORTARE I PIXEL IN COORDINATE IMMAGINI VEDIAMO SE COSI' FUNZIONA
+	  // TODO CONTROLLARE!
+	  int scale_factor;
+	  if (x>y)
+		scale_factor = image_resize/x;
+	  else 
+		scale_factor = y_dim/y;
+	  XML img_scale = info.addChild("image_scale");
+	  img_scale.setIntContent(scale_factor);
+	  
 	  mainType.setContent(buildingtype);
 	  XML floor = savedata.addChild("floor");
 	  XML spaces = floor.addChild("spaces");
@@ -737,8 +805,8 @@ private void localMovePoint(int directions){
 	private void scaleXML(XML xml){
 		XML xScale = xml.addChild("scale");
 		XML xRepresented = xScale.addChild("represented_distance");
-		XML xValue = xRepresented.addChild("value");
-		xValue.setIntContent(resolution);
+		XML xValue = xRepresented.addChild("value");   
+		xValue.setIntContent(resolution/Globals.bigzoom);
 		XML xUM1 = xRepresented.addChild("um");
 		xUM1.setContent("pixel");
 		XML xReal = xScale.addChild("real_distance");
@@ -767,6 +835,10 @@ private void localMovePoint(int directions){
 	public void deb(String s) {
 	   fill(0);
 	   text(s,offset+10+(x2_dim-60)/2,15);
+	}
+	
+	public int getResolutionHalf() {
+		return (int) resolution/2;
 	}
 	
 }

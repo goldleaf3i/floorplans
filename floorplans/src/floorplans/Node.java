@@ -1,8 +1,11 @@
 package floorplans;
 
 import java.awt.geom.Line2D;
+
 import processing.core.PApplet;
+
 import java.util.UUID;
+
 import processing.data.XML;
 
 public class Node{
@@ -20,6 +23,7 @@ public class Node{
   public int sr, sg, sb;
   public int opacity;
   public NodeGeometry geom;
+  public Offset offset;
   
   Node ( PApplet _parent, int id, int x, int y, Label l,int type, boolean connected, int r,int g, int b) {
     this.parent = _parent;
@@ -52,7 +56,7 @@ public class Node{
     parent.stroke(sr,sg,sb);
     //strokeWeight(2);
     parent.fill(r,g,b,opacity);
-    parent.ellipse(this.x, this.y, Globals.shape/2, Globals.shape/2);
+    parent.ellipse(this.x-offset.zx, this.y-offset.zy, Globals.shape, Globals.shape);
     
     // stampo il contorno.
     this.geom.display();
@@ -63,7 +67,7 @@ public class Node{
 	    parent.stroke(sr,sg,sb);
 	    //strokeWeight(2);
 	    parent.fill(r,g,b,opacity);
-	    parent.ellipse(this.x, this.y, Globals.shape, Globals.shape);
+	    parent.ellipse(this.x/Globals.bigzoom, this.y/Globals.bigzoom, Globals.shape, Globals.shape);
   }
   
   void setColor(int r, int g, int b) {
@@ -97,8 +101,8 @@ public class Node{
 	  return this.geom.closedRoom();
   }
   
-  void removeLastPoint(){
-	  this.geom.removeLastPoint();
+  int removeLastPoint(){
+	  return this.geom.removeLastPoint();
   }
   
  void toXMLPLAIN(XML xml){
@@ -114,8 +118,8 @@ public class Node{
    Xcolor.setInt("g",g);
    Xcolor.setInt("b",b);
    XML Xpose = Xnode.addChild("position");
-   Xpose.setInt("x",x);
-   Xpose.setInt("y",y);
+   Xpose.setInt("x",x/Globals.bigzoom);
+   Xpose.setInt("y",y/Globals.bigzoom);
  }
  
  void toXML(XML xml){
@@ -129,8 +133,8 @@ public class Node{
 //		   Xcolor.setInt("b",b);
 		   XML Xcent = Xnode.addChild("centroid");
 		   XML Xpose = Xcent.addChild("point");
-		   Xpose.setInt("x",x);
-		   Xpose.setInt("y",y);
+		   Xpose.setInt("x",x/Globals.bigzoom);
+		   Xpose.setInt("y",y/Globals.bigzoom);
 		   this.geom.toXML(Xnode);
 		   
  }
@@ -141,9 +145,9 @@ public class Node{
 	 geom.addPoint(x, y);
  }
  
- void addDoor(int x, int y)
+ void addDoor(int x, int y, boolean t)
  {
-	 geom.addDoor(x, y);
+	 geom.addDoor(x, y, t);
  }
  
  void addConnection( Connection c){
@@ -163,4 +167,8 @@ public class Node{
 	 this.geom.addDoorUID(x, y, uid);
  }
  
+ public void setOffset(Offset o){
+	 this.offset=o;
+	 this.geom.setOffset(o);
+ }
 }

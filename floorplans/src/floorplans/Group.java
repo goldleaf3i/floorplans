@@ -50,11 +50,13 @@ public class Group {
 	    this.b = b;
 		  }
 	 void toXML(XML xml){
-		 XML group = xml.addChild("group");
+		 XML group = xml.addChild("group_features");
 		 XML xName = group.addChild("name");
+		 XML type = group.addChild("type");
+		 type.setContent("functional_area");
 		 xName.setContent(this.name);
-		 XML id = group.addChild("id");
-		 id.setContent(UUID.randomUUID().toString());
+		 group.setString("id",UUID.randomUUID().toString());
+		 //id.setContent(UUID.randomUUID().toString());
 		 for (int i=0; i<nodes.size(); i++){
 			 Node tn = nodes.get(i);
 			 XML sid = group.addChild("space");

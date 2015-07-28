@@ -18,8 +18,10 @@ public class NodeGeometry{
   public ArrayList<Connection> C;
   // UUID di tutte le porte. le uso per stamparle e per associarle ai linesegment.
   public ArrayList<UUID> D_U;
-  //TODO COSA E RESOLUTION? LA HO INVENTATA
-  // TODO VA CAMBIATA
+  // ELENCO DELLE PORTE IMPLICITE
+  public ArrayList<Integer> D_IMPLICIT;
+  
+  public Offset offset;
   public int resolution = Globals.resolution;
   private int x1,y1;
   
@@ -34,8 +36,12 @@ public class NodeGeometry{
   D = new ArrayList<Integer>();
   C = new ArrayList<Connection>();
   D_U = new ArrayList<UUID>();
+  D_IMPLICIT = new ArrayList<Integer>();
   }
   
+  void setOffset(Offset o){
+	  this.offset = o;
+  }
   void addPoint(int x, int y) {
       X.add(x);
       Y.add(y);
@@ -46,11 +52,14 @@ public class NodeGeometry{
       y1 = y;
   }
   
-  void addDoor(int x, int y) {
+  void addDoor(int x, int y, boolean t) {
 	  // TODO LA PORTA E' UN PUNTO: VA RESA UN SEGMENTO.
 	  // TODO LA PORTA DEVE AVERE UN MATCHING CON GLI ALTRI PUNTI PIU DIFFICILE.
       D.add(this.pointIndex(x, y));
       D_U.add(UUID.randomUUID());
+      if (t == false)
+    	  // Aggiungo l'indice del punto della porta implicita all'eelenco delle porte implicite
+    	  D_IMPLICIT.add(this.pointIndex(x, y));
 
   }
   
@@ -123,21 +132,21 @@ public class NodeGeometry{
 	  // stampo le linee
 	  if (X.size() <= 1){
 		  if (X.size() == 1){
-			    parent.ellipse(X.get(0),Y.get(0),5,5);
+			    parent.ellipse(X.get(0)-offset.zx,Y.get(0)-offset.zy,5,5);
 		  }  
 		  return;
 		  }
 	  for (int i=1; i < X.size(); i++){
-		    parent.line(Math.round(L.get(i-1).getX1()),Math.round(L.get(i-1).getY1()),Math.round(L.get(i-1).getX2()),Math.round(L.get(i-1).getY2()));
+		    parent.line(Math.round(L.get(i-1).getX1())-offset.zx,Math.round(L.get(i-1).getY1())-offset.zy,Math.round(L.get(i-1).getX2())-offset.zx,Math.round(L.get(i-1).getY2())-offset.zy);
 		    //line(X.get(i-1),Y.get(i-1),X.get(i),Y.get(i));
 		    if (i==1) {
 		    	parent.stroke(255,55,55);
-		    	parent.ellipse(X.get(i-1),Y.get(i-1),5,5);
+		    	parent.ellipse(X.get(i-1)-offset.zx,Y.get(i-1)-offset.zy,5,5);
 		    	parent.stroke(10);
 		    	}
 		    else 
-		    	parent.ellipse(X.get(i-1),Y.get(i-1),5,5);
-		    parent.ellipse(X.get(i),Y.get(i),5,5);
+		    	parent.ellipse(X.get(i-1)-offset.zx,Y.get(i-1)-offset.zy,5,5);
+		    parent.ellipse(X.get(i)-offset.zx,Y.get(i)-offset.zy,5,5);
 		  }
   }
   
@@ -145,9 +154,25 @@ public class NodeGeometry{
 	    //parent.fill(239,192,167);
 	   	parent.fill(255);
 	    for (int j=0; j < D.size();j++){
-	    	int i = D.get(j);
-	    	parent.rect(X.get(i)-2,Y.get(i)-2,5,5);
-	    	}
+    	  int i = D.get(j);
+    	  
+    	  // TODO STAMPO ANCHE LA PORTA COME SEGMENTO // LO STAMPO INTORNO AL PUNTO.
+    	  parent.stroke(Globals.r_door,Globals.g_door,Globals.b_door);
+    	  Line2D.Float tmpLine = L.get(i-1);
+    	  // EXTODO INVERTO I PUNTI QUANDO GLI STAMPO CHECK SE E' OK -> DOVREBBE ESSERE OK
+    	  int x1 = (int) tmpLine.getX2();
+    	  int x2 = (int) tmpLine.getX1();
+    	  int y1 = (int) tmpLine.getY2();
+    	  int y2 = (int) tmpLine.getY1();
+    	  parent.strokeWeight(3);
+    	  if (Math.abs(x1-x2) >= Globals.p_distance) 
+    		  parent.line(X.get(i)-offset.zx-Globals.default_resolution/2,Y.get(i)-offset.zy,X.get(i)-offset.zx + Globals.default_resolution/2,Y.get(i)-offset.zy);
+    	  else 
+    		  parent.line(X.get(i)-offset.zx,Y.get(i)-offset.zy-Globals.default_resolution/2,X.get(i)-offset.zx,Y.get(i)-offset.zy+Globals.default_resolution/2);
+		  // EXTODO INVERTO I PUNTI QUANDO GLI STAMPO CHECK SE E' -> DOVREBBE ESSERE OK
+    	  parent.strokeWeight(1);
+	      parent.rect(X.get(i)-3-offset.zx,Y.get(i)-3-offset.zy,7,7);
+	    }
   }
  
   boolean closedRoom(){
@@ -164,7 +189,15 @@ public class NodeGeometry{
 	  return false;
   }
  
-  void removeLastPoint(){
+  int removeLastPoint(){
+	  // restituisco 1 se era l'unico punto. Altrimenti restituisco 0.
+	  
+	 // TODO: SE IL PRIMO PUNTO E' DOOR, RIMUOVER ANCHE DOOR!
+	  if (X.size() == 1){
+		  X.remove(X.size()-1);
+		  Y.remove(Y.size()-1);
+		  return 1;
+	  }
 	  // TODO CONTROLLARE SE QUESTO FUNZIONA
 	  // TODO MODIFICARE IN MODO TALE CHE RIESCA A GESTIRE IL CANCELLAMENTO DI UNA CONNESSIONE
 	  if (D.indexOf(X.size()-2)!= -1){
@@ -176,10 +209,11 @@ public class NodeGeometry{
 	  X.remove(X.size()-1);
 	  Y.remove(Y.size()-1);
 	  L.remove(L.size()-1);
+	  return 0;
   }
 
   void toXML(XML xml){
-//	     // TODO da fare: anche stampare connections
+
 	  computeBoundingBox();
 	  XML bb = xml.addChild("bounding_box");
 	  XML xMaxX = bb.addChild("maxx");
@@ -216,24 +250,26 @@ public class NodeGeometry{
 	  }
   }
   
+  // EXTODO CHECK SE ZOOM FUNZIONA -> OK DOVREBBE ANDARE
   private void pointXML(XML xml,int i){
 	   XML xpoint = xml.addChild("point");
-	   xpoint.setInt("x",X.get(i));
-	   xpoint.setInt("y",Y.get(i));
+	   xpoint.setInt("x",X.get(i)/Globals.bigzoom);
+	   xpoint.setInt("y",Y.get(i)/Globals.bigzoom);
   }
   private void pointXML(XML xml,int x,int y){
 	   XML xpoint = xml.addChild("point");
-	   xpoint.setInt("x",x);
-	   xpoint.setInt("y",y);
+	   xpoint.setInt("x",x/Globals.bigzoom);
+	   xpoint.setInt("y",y/Globals.bigzoom);
  }
   
   private void lineXML(XML xml, int index){
 	  UUID tmpID;
 	  Line2D.Float tmpLine = L.get(index);
-	  int x1 = (int) tmpLine.getX1();
-	  int x2 = (int) tmpLine.getX2();
-	  int y1 = (int) tmpLine.getY1();
-	  int y2 = (int) tmpLine.getY2();
+	  // EXTODO INVERTO I PUNTI QUANDO GLI STAMPO CHECK SE E' OK -> DOVREBBE ESSERE OK
+	  int x1 = (int) tmpLine.getX2();
+	  int x2 = (int) tmpLine.getX1();
+	  int y1 = (int) tmpLine.getY2();
+	  int y2 = (int) tmpLine.getY1();
 	  int isdoor = -1;
 	  for (int i=0; i<D.size(); i++) {
 		  int j = D.get(i);
@@ -243,11 +279,10 @@ public class NodeGeometry{
 		  }
 	  }
 	  // TODO QUESTO VA RIMOSSO E AGGIUNGO IN MODO PIU PRECISO. NON POSSO AGGIUNGERE UN DOPPIO SEGMENTO
-	  // TODO CHECK
 	  if (isdoor != -1) {
 		  //ho trovato l'index, è una porta, la aggiungo.
 			 // altrimenti e' una porta.
-			 //SE E' UNA PORTA ALLORA AGGIUNGO UN ALTRO SEGMENTO FITTIZIO.
+			 //SE E' UNA PORTA ALLORA AGGIUNGO UN ALTRO SEGMENTO FITTIZIO
 		  XML doorLinesegment = xml.addChild("linesegment");
 		  tmpID= D_U.get(D.indexOf(isdoor));
 		  doorLinesegment.setString("id",tmpID.toString());
@@ -256,7 +291,12 @@ public class NodeGeometry{
 		  XML lclassxml = xml.addChild("class");
 		  lclassxml.setContent("PORTAL");
 		  XML ltypexml = xml.addChild("type");
-		  ltypexml.setContent("EXPLICIT");
+		  // TODO CHECCKARE SE IMPLICIT E EXPLICIT VANNO
+		  if (D_IMPLICIT.indexOf(isdoor)!=-1) {
+			  ltypexml.setContent("IMPLICIT");			  
+		  }
+		  else 
+			  ltypexml.setContent("EXPLICIT");
 		  
 	  }
 	  XML linesegment = xml.addChild("linesegment");
@@ -264,9 +304,9 @@ public class NodeGeometry{
 	  linesegment.setString("id",tmpID.toString());
 	  pointXML(linesegment,x1,y1);
 	  pointXML(linesegment,x2,y2);
-	  XML lclassxml = xml.addChild("class");
-	  lclassxml.setContent("WALL");
-	  XML ltypexml = xml.addChild("type");
+	  XML lclassxml = linesegment.addChild("class");
+	  lclassxml.setContent("WALL");  
+	  XML ltypexml = linesegment.addChild("type");
 	  ltypexml.setContent("EXPLICIT");
   }
   
@@ -275,9 +315,7 @@ public class NodeGeometry{
 		  //TODO RENDERLA HORIZONTAL O VERTICAL IMPLICIT O ESPLICIT
 		  Connection tmpC = C.get(i);
 		  XML portal = xml.addChild("portal");
-		  XML c_id = portal.addChild("id");
-		  // E' uno schifo non andrà mai TODO CAMBIARE
-		  // c_id.setContent(D_U.get(D.indexOf(this.pointIndex(tmpC.x, tmpC.y))).toString());
+		  XML c_id = portal.addChild("linesegment");
 		  c_id.setContent(tmpC.segment_uid.toString());
 		  XML classxml = portal.addChild("class");
 		  classxml.setContent("HORIZONTAL");

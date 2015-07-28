@@ -19,8 +19,9 @@ public class Connection{
 	  public UUID uid1, uid2;
 	  // UUID DEL LINESEGMENT
 	  public UUID segment_uid;
+	  public Offset offset;
 	  
-	  Connection(PApplet _parent, int first, int second, int x1, int y1, int x2, int y2, UUID uid1, UUID uid2, UUID segment_uid) {
+	  Connection(PApplet _parent, int first, int second, int x1, int y1, int x2, int y2, UUID uid1, UUID uid2, UUID segment_uid,Offset offset) {
 	    this.parent = _parent;
 		this.first = first;
 	    this.second = second;
@@ -36,12 +37,19 @@ public class Connection{
 	    this.uid1 = uid1;
 	    this.uid2 = uid2;
 	    this.segment_uid = segment_uid;
+	    this.offset = offset;
 	  }
 	 void display() {
 		parent.strokeWeight(2);
 	    parent.fill(111);
-	    parent.line(x1,y1,x2,y2);
+	    parent.line(x1-offset.zx,y1-offset.zy,x2-offset.zx,y2-offset.zy);
 	 } 
+	 
+	 void displayTopological(){
+			parent.strokeWeight(2);
+		    parent.fill(111);
+		    parent.line(x1/Globals.bigzoom,y1/Globals.bigzoom,x2/Globals.bigzoom,y2/Globals.bigzoom);
+	 }
 	 void setDoor(int x, int y, int door1, int door2){
 		this.x=x;
 		this.y=y;
