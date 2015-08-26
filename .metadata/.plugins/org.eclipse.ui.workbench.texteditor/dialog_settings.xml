@@ -13,16 +13,16 @@
 		<item value="false" key="isRegEx"/>
 		<item value="false" key="incremental"/>
 		<item value="false" key="wholeword"/>
-		<item value="addPo" key="selection"/>
+		<item value="save" key="selection"/>
 		<list key="findhistory">
+			<item value="save"/>
+			<item value="addDo"/>
+			<item value="&apos;c&apos;"/>
+			<item value="addDoo"/>
 			<item value="addPo"/>
 			<item value="zx"/>
 			<item value="addPoin"/>
 			<item value="mouse"/>
-			<item value="get"/>
-			<item value="set_d"/>
-			<item value="&apos;C&apos;"/>
-			<item value="removeL"/>
 		</list>
 		<list key="replacehistory">
 			<item value="Globals.p_distance"/>

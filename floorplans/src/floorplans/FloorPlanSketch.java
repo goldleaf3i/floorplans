@@ -813,7 +813,7 @@ private void localMovePoint(int directions){
 		XML xValue2 = xReal.addChild("value");
 		xValue2.setIntContent(90);
 		XML xUM2 = xReal.addChild("um");
-		xUM2.setContent("m");
+		xUM2.setContent("cm");
 	}
 	public void saveTopologicalMap(){
 		  String fileNext = filename.substring(0, filename.lastIndexOf('.')) + "_topological.xml";

@@ -58,7 +58,8 @@ public class NodeGeometry{
       D.add(this.pointIndex(x, y));
       D_U.add(UUID.randomUUID());
       if (t == false)
-    	  D_IMPLICIT.add(D.size());
+    	  // Aggiungo l'indice del punto della porta implicita all'eelenco delle porte implicite
+    	  D_IMPLICIT.add(this.pointIndex(x, y));
 
   }
   
@@ -199,9 +200,10 @@ public class NodeGeometry{
 	  }
 	  // TODO CONTROLLARE SE QUESTO FUNZIONA
 	  // TODO MODIFICARE IN MODO TALE CHE RIESCA A GESTIRE IL CANCELLAMENTO DI UNA CONNESSIONE
-	  if (D.indexOf(X.size()-2)!= -1){
-		  D_U.remove(D.indexOf(X.size()-2));
-		  D.remove(D.indexOf(X.size()-2));
+	  //QUI DEVO CANCELLARE ANCHE IL SEGMENTO FITTIZIO CHE INSERISCO; ALTRIMENTI SE NE HO 0 MI RIMANE IL SEGMENTO FITTIZIO
+	  if (D.indexOf(X.size()-1)!= -1){
+		  D_U.remove(D.indexOf(X.size()-1));
+		  D.remove(D.indexOf(X.size()-1));
 	  }
 	  x1 = X.get(X.size()-2);
 	  y1 = Y.get(Y.size()-2);
@@ -287,10 +289,15 @@ public class NodeGeometry{
 		  doorLinesegment.setString("id",tmpID.toString());
 		  pointXML(doorLinesegment,isdoor);
 		  pointXML(doorLinesegment,isdoor);
-		  XML lclassxml = xml.addChild("class");
+		  XML lclassxml = doorLinesegment.addChild("class");
 		  lclassxml.setContent("PORTAL");
-		  XML ltypexml = xml.addChild("type");
-		  ltypexml.setContent("EXPLICIT");
+		  XML ltypexml = doorLinesegment.addChild("type");
+		  // TODO CHECCKARE SE IMPLICIT E EXPLICIT VANNO
+		  if (D_IMPLICIT.indexOf(isdoor)!=-1) {
+			  ltypexml.setContent("IMPLICIT");			  
+		  }
+		  else 
+			  ltypexml.setContent("EXPLICIT");
 		  
 	  }
 	  XML linesegment = xml.addChild("linesegment");

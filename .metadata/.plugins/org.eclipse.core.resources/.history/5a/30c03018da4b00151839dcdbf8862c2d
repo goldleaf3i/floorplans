@@ -18,7 +18,8 @@ public class NodeGeometry{
   public ArrayList<Connection> C;
   // UUID di tutte le porte. le uso per stamparle e per associarle ai linesegment.
   public ArrayList<UUID> D_U;
-  public ArrayList<UUID> D_IMPLICIT;
+  // ELENCO DELLE PORTE IMPLICITE
+  public ArrayList<Integer> D_IMPLICIT;
   
   public Offset offset;
   public int resolution = Globals.resolution;
@@ -35,6 +36,7 @@ public class NodeGeometry{
   D = new ArrayList<Integer>();
   C = new ArrayList<Connection>();
   D_U = new ArrayList<UUID>();
+  D_IMPLICIT = new ArrayList<Integer>();
   }
   
   void setOffset(Offset o){
@@ -56,7 +58,8 @@ public class NodeGeometry{
       D.add(this.pointIndex(x, y));
       D_U.add(UUID.randomUUID());
       if (t == false)
-    	  
+    	  // Aggiungo l'indice del punto della porta implicita all'eelenco delle porte implicite
+    	  D_IMPLICIT.add(this.pointIndex(x, y));
 
   }
   
@@ -285,10 +288,15 @@ public class NodeGeometry{
 		  doorLinesegment.setString("id",tmpID.toString());
 		  pointXML(doorLinesegment,isdoor);
 		  pointXML(doorLinesegment,isdoor);
-		  XML lclassxml = xml.addChild("class");
+		  XML lclassxml = doorLinesegment.addChild("class");
 		  lclassxml.setContent("PORTAL");
-		  XML ltypexml = xml.addChild("type");
-		  ltypexml.setContent("EXPLICIT");
+		  XML ltypexml = doorLinesegment.addChild("type");
+		  // TODO CHECCKARE SE IMPLICIT E EXPLICIT VANNO
+		  if (D_IMPLICIT.indexOf(isdoor)!=-1) {
+			  ltypexml.setContent("IMPLICIT");			  
+		  }
+		  else 
+			  ltypexml.setContent("EXPLICIT");
 		  
 	  }
 	  XML linesegment = xml.addChild("linesegment");

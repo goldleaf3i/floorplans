@@ -53,6 +53,12 @@ public class NodeGeometry{
   }
   
   void addDoor(int x, int y, boolean t) {
+	  
+	  //TODO Sistemare in aniera piu sensata, mettendo un try-catch
+	  // FIX SCEMO: SE LA PRIMA PORTA E' ANCHE IL PRIMO SEGMENTO ALLORA NON LA AGGIUNGO
+	  if (X.size()==0)
+		  return;
+	  
 	  // TODO LA PORTA E' UN PUNTO: VA RESA UN SEGMENTO.
 	  // TODO LA PORTA DEVE AVERE UN MATCHING CON GLI ALTRI PUNTI PIU DIFFICILE.
       D.add(this.pointIndex(x, y));
@@ -200,9 +206,10 @@ public class NodeGeometry{
 	  }
 	  // TODO CONTROLLARE SE QUESTO FUNZIONA
 	  // TODO MODIFICARE IN MODO TALE CHE RIESCA A GESTIRE IL CANCELLAMENTO DI UNA CONNESSIONE
-	  if (D.indexOf(X.size()-2)!= -1){
-		  D_U.remove(D.indexOf(X.size()-2));
-		  D.remove(D.indexOf(X.size()-2));
+	  //QUI DEVO CANCELLARE ANCHE IL SEGMENTO FITTIZIO CHE INSERISCO; ALTRIMENTI SE NE HO 0 MI RIMANE IL SEGMENTO FITTIZIO
+	  if (D.indexOf(X.size()-1)!= -1){
+		  D_U.remove(D.indexOf(X.size()-1));
+		  D.remove(D.indexOf(X.size()-1));
 	  }
 	  x1 = X.get(X.size()-2);
 	  y1 = Y.get(Y.size()-2);
@@ -288,9 +295,9 @@ public class NodeGeometry{
 		  doorLinesegment.setString("id",tmpID.toString());
 		  pointXML(doorLinesegment,isdoor);
 		  pointXML(doorLinesegment,isdoor);
-		  XML lclassxml = xml.addChild("class");
+		  XML lclassxml = doorLinesegment.addChild("class");
 		  lclassxml.setContent("PORTAL");
-		  XML ltypexml = xml.addChild("type");
+		  XML ltypexml = doorLinesegment.addChild("type");
 		  // TODO CHECCKARE SE IMPLICIT E EXPLICIT VANNO
 		  if (D_IMPLICIT.indexOf(isdoor)!=-1) {
 			  ltypexml.setContent("IMPLICIT");			  

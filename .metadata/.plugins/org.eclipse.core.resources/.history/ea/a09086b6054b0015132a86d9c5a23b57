@@ -656,14 +656,17 @@ private void localMovePoint(int directions){
 		    // TODO lo aggiungo anche alla stanza
 		    n.get(insert_room).addPoint(xp, yp);
 
-		    if (set_door == 1){
+		    if (set_door != 0){
 		    	set_door = 0;
 		    	D.add(X.size()-1);
 		    	D2.add(insert_room);
 		    	//non aggiunge le porte
 		    	// TODO NON VA ADD  DOOOR
 		    	if (insert_room != -1){
-		    		n.get(insert_room).addDoor(xp, yp);
+		    		if (set_door == 1 )
+		    			n.get(insert_room).addDoor(xp, yp, true);
+		    		else 
+		    			n.get(insert_room).addDoor(xp, yp, false);
 		    		if (door_index != -1) {
 		    			// Ho trovato una porta, aggiungo una connessione.
 		    			addDoor(door_index, X.size()-1);
@@ -770,6 +773,17 @@ private void localMovePoint(int directions){
 	  info.setContent("Inserire informazioni sull'edificio");
 	  XML xBuildingType = savedata.addChild("building_type");
 	  XML mainType = xBuildingType.addChild("main_type");
+	  int image_resize = x_dim - x2_dim;
+	  // TODO io riduco l'immagine a 1000*900 PIXEL -> DEVO RIPORTARE I PIXEL IN COORDINATE IMMAGINI VEDIAMO SE COSI' FUNZIONA
+	  // TODO CONTROLLARE!
+	  int scale_factor;
+	  if (x>y)
+		scale_factor = image_resize/x;
+	  else 
+		scale_factor = y_dim/y;
+	  XML img_scale = info.addChild("image_scale");
+	  img_scale.setIntContent(scale_factor);
+	  
 	  mainType.setContent(buildingtype);
 	  XML floor = savedata.addChild("floor");
 	  XML spaces = floor.addChild("spaces");
@@ -791,13 +805,13 @@ private void localMovePoint(int directions){
 	private void scaleXML(XML xml){
 		XML xScale = xml.addChild("scale");
 		XML xRepresented = xScale.addChild("represented_distance");
-		XML xValue = xRepresented.addChild("value");
+		XML xValue = xRepresented.addChild("value");   
 		xValue.setIntContent(resolution/Globals.bigzoom);
 		XML xUM1 = xRepresented.addChild("um");
 		xUM1.setContent("pixel");
 		XML xReal = xScale.addChild("real_distance");
 		XML xValue2 = xReal.addChild("value");
-		xValue2.setIntContent(90);
+		xValue2.setIntContent(0.90);
 		XML xUM2 = xReal.addChild("um");
 		xUM2.setContent("m");
 	}

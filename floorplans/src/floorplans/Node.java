@@ -107,6 +107,7 @@ public class Node{
   
  void toXMLPLAIN(XML xml){
    XML Xnode = xml.addChild("node");
+   Xnode.setString("uid",uid.toString());
    XML Xid = Xnode.addChild("id");
    Xid.setContent(Integer.toString(id));
    XML Xlabel = Xnode.addChild("label");
