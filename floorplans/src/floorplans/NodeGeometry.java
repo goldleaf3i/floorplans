@@ -311,6 +311,11 @@ public class NodeGeometry{
 		  }
 		  else 
 			  ltypexml.setContent("EXPLICIT");
+		  XML doorsizexml = doorLinesegment.addChild("features");
+		  if (D_DOUBLE.indexOf(isdoor)!=-1)
+			  doorsizexml.setContent("DOUBLE");
+		  else
+			  doorsizexml.setContent("NORMAL");
 		  
 	  }
 	  XML linesegment = xml.addChild("linesegment");
@@ -322,6 +327,8 @@ public class NodeGeometry{
 	  lclassxml.setContent("WALL");  
 	  XML ltypexml = linesegment.addChild("type");
 	  ltypexml.setContent("EXPLICIT");
+	  XML sizexml = linesegment.addChild("features");
+	  sizexml.setContent("NORMAL");
   }
   
   private void connectionsXML(XML xml){
@@ -339,13 +346,13 @@ public class NodeGeometry{
 		  if (index != -1)
 			  typexml.setContent("IMPLICIT");
 		  else 
-		  {
-			  index  = D_DOUBLE.indexOf(this.pointIndex(tmpC.x, tmpC.y));
-			  if (index != -1)
-				  typexml.setContent("EXPLICIT_DOUBLE");
-			  else
-				  typexml.setContent("EXPLICIT");
-		  }
+			  typexml.setContent("EXPLICIT");
+		  XML sizexml = portal.addChild("features");
+		  index  = D_DOUBLE.indexOf(this.pointIndex(tmpC.x, tmpC.y));
+		  if (index != -1)
+			  sizexml.setContent("DOUBLE");
+		  else 
+			  sizexml.setContent("NORMAL");
 		  XML direction = portal.addChild("direction");
 		  direction.setContent("BOTH");
 		  XML other_room = portal.addChild("target");

@@ -1,0 +1,11 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = true
+	ignorecase = true
+	precomposeunicode = true
+[remote "origin"]
+	url = https://goldleaf3i@bitbucket.org/goldleaf3i/floorplans.git
+	fetch = +refs/*:refs/*
+	mirror = true
+	pushurl = https://github.com/goldleaf3i/floorplans
