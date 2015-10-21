@@ -146,7 +146,7 @@ public class Node{
 	 geom.addPoint(x, y);
  }
  
- void addDoor(int x, int y, boolean t)
+ void addDoor(int x, int y, int t)
  {
 	 geom.addDoor(x, y, t);
  }

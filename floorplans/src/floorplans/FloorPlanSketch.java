@@ -54,6 +54,7 @@ public class FloorPlanSketch extends PApplet {
 
 	Label[] labels;
 	String buildingtype; 
+	String labelxml = "/Users/matteoluperto/Documents/eclipseworkspace/floorplans/school.xml";
 	
 	// SE STO INSERENDO UNA STANZA.
 	int insert_room=-1;
@@ -397,12 +398,24 @@ public class FloorPlanSketch extends PApplet {
 		  }
 		  break;
 	  case 'c':
+	  case 'C':
+		  // regular size door
 		  if (set_door == 0 )
 			  set_door = 1;
 		  else 
 			  set_door = 0;
 		  break;
-	  case 'C': 
+	  case 'v':
+	  case 'V': 
+		  // double door 
+		  if (set_door == 0 )
+			  set_door = 3;
+		  else 
+			  set_door = 0;
+		  break;
+	  case 'x':
+	  case 'X': 
+		  // implicit door
 		  if (set_door == 0 )
 			  set_door = 2;
 		  else 
@@ -657,21 +670,24 @@ private void localMovePoint(int directions){
 		    n.get(insert_room).addPoint(xp, yp);
 
 		    if (set_door != 0){
-		    	set_door = 0;
 		    	D.add(X.size()-1);
 		    	D2.add(insert_room);
-		    	//non aggiunge le porte
-		    	// TODO NON VA ADD  DOOOR
 		    	if (insert_room != -1){
 		    		if (set_door == 1 )
-		    			n.get(insert_room).addDoor(xp, yp, true);
+		    			n.get(insert_room).addDoor(xp, yp, 1);
 		    		else 
-		    			n.get(insert_room).addDoor(xp, yp, false);
+		    			{ 
+		    			if (set_door == 3)
+			    			n.get(insert_room).addDoor(xp, yp, 2);
+		    			else 
+		    				n.get(insert_room).addDoor(xp, yp, 0);
+		    			}
 		    		if (door_index != -1) {
 		    			// Ho trovato una porta, aggiungo una connessione.
 		    			addDoor(door_index, X.size()-1);
 		    		}
 		    	}
+		    	set_door = 0;
 		    	// TODO STAMPARLO COME PORTAs
 		    	// AGGIUNGERLO ALLA PORTA
 		    }
@@ -705,7 +721,7 @@ private void localMovePoint(int directions){
 	  int counter = 1;
 	  
 	  // Load XML file
-	  xml = loadXML("/Users/matteoluperto/Documents/eclipseworkspace/floorplans/labels.xml");
+	  xml = loadXML(labelxml);
 	  XML buildingElement = xml.getChild("buildingtype");
 	  XML building_name = xml.getChild("type_name");
 	  buildingtype = building_name.getContent();

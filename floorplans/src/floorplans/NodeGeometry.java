@@ -20,6 +20,8 @@ public class NodeGeometry{
   public ArrayList<UUID> D_U;
   // ELENCO DELLE PORTE IMPLICITE
   public ArrayList<Integer> D_IMPLICIT;
+  // ELENCO DELLE PORTE ESPLICITE DOPPIE:
+  public ArrayList<Integer> D_DOUBLE;
   
   public Offset offset;
   public int resolution = Globals.resolution;
@@ -37,6 +39,7 @@ public class NodeGeometry{
   C = new ArrayList<Connection>();
   D_U = new ArrayList<UUID>();
   D_IMPLICIT = new ArrayList<Integer>();
+  D_DOUBLE = new ArrayList<Integer>();
   }
   
   void setOffset(Offset o){
@@ -52,7 +55,7 @@ public class NodeGeometry{
       y1 = y;
   }
   
-  void addDoor(int x, int y, boolean t) {
+  void addDoor(int x, int y, int t) {
 	  
 	  //TODO Sistemare in aniera piu sensata, mettendo un try-catch
 	  // FIX SCEMO: SE LA PRIMA PORTA E' ANCHE IL PRIMO SEGMENTO ALLORA NON LA AGGIUNGO
@@ -63,9 +66,13 @@ public class NodeGeometry{
 	  // TODO LA PORTA DEVE AVERE UN MATCHING CON GLI ALTRI PUNTI PIU DIFFICILE.
       D.add(this.pointIndex(x, y));
       D_U.add(UUID.randomUUID());
-      if (t == false)
+      if (t == 0)
     	  // Aggiungo l'indice del punto della porta implicita all'eelenco delle porte implicite
     	  D_IMPLICIT.add(this.pointIndex(x, y));
+      else 
+    	  if (t == 2) 
+	    	  // Aggiungo l'indice del punto della porta implicita all'eelenco delle porte implicite
+	    	  D_DOUBLE.add(this.pointIndex(x, y));
 
   }
   
@@ -327,7 +334,18 @@ public class NodeGeometry{
 		  XML classxml = portal.addChild("class");
 		  classxml.setContent("HORIZONTAL");
 		  XML typexml = portal.addChild("type");
-		  typexml.setContent("EXPLICIT");
+		  //QUI INSERIRE MODIFICA
+		  int index  = D_IMPLICIT.indexOf(this.pointIndex(tmpC.x, tmpC.y));
+		  if (index != -1)
+			  typexml.setContent("IMPLICIT");
+		  else 
+		  {
+			  index  = D_DOUBLE.indexOf(this.pointIndex(tmpC.x, tmpC.y));
+			  if (index != -1)
+				  typexml.setContent("EXPLICIT_DOUBLE");
+			  else
+				  typexml.setContent("EXPLICIT");
+		  }
 		  XML direction = portal.addChild("direction");
 		  direction.setContent("BOTH");
 		  XML other_room = portal.addChild("target");
